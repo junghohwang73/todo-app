@@ -1,0 +1,400 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: '맑은 고딕', Malgun Gothic, sans-serif;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    min-height: 100vh;
+    padding: 20px;
+}
+
+.container {
+    max-width: 600px;
+    margin: 0 auto;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+/* 헤더 */
+.header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 30px 20px;
+    text-align: center;
+}
+
+.header h1 {
+    font-size: 14pt;
+    font-weight: 600;
+    letter-spacing: 1px;
+}
+
+/* 입력 폼 섹션 */
+.input-section {
+    padding: 20px;
+    border-bottom: 2px solid #f0f0f0;
+}
+
+.form-group {
+    margin-bottom: 12px;
+}
+
+.form-group label {
+    display: block;
+    font-size: 12pt;
+    margin-bottom: 6px;
+    color: #333;
+    font-weight: 500;
+}
+
+#todoInput {
+    width: 100%;
+    padding: 12px;
+    font-size: 12pt;
+    border: 2px solid #e0e0e0;
+    border-radius: 6px;
+    font-family: '맑은 고딕', Malgun Gothic, sans-serif;
+    transition: border-color 0.3s ease;
+}
+
+#todoInput:focus {
+    outline: none;
+    border-color: #667eea;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1.2fr auto;
+    gap: 12px;
+}
+
+#priorityInput,
+#deadlineInput {
+    width: 100%;
+    padding: 10px;
+    font-size: 12pt;
+    border: 2px solid #e0e0e0;
+    border-radius: 6px;
+    font-family: '맑은 고딕', Malgun Gothic, sans-serif;
+    background: white;
+    cursor: pointer;
+    transition: border-color 0.3s ease;
+}
+
+#priorityInput:focus,
+#deadlineInput:focus {
+    outline: none;
+    border-color: #667eea;
+}
+
+.btn-add {
+    padding: 10px 20px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 12pt;
+    font-family: '맑은 고딕', Malgun Gothic, sans-serif;
+    cursor: pointer;
+    font-weight: 600;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.btn-add:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(102, 126, 234, 0.4);
+}
+
+.btn-add:active {
+    transform: translateY(0);
+}
+
+/* 섹션 제목 */
+.section-title {
+    font-size: 12pt;
+    color: #333;
+    margin: 0;
+    font-weight: 600;
+    padding: 0 0 12px 0;
+}
+
+/* 활성 To Do 리스트 */
+.active-todos {
+    padding: 20px;
+    border-bottom: 2px solid #f0f0f0;
+}
+
+/* To Do 리스트 */
+.todo-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.todo-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    border-left: 4px solid #667eea;
+    transition: all 0.3s ease;
+}
+
+.todo-item:hover {
+    background: #f0f1f5;
+    transform: translateX(2px);
+}
+
+.todo-item.completed {
+    opacity: 0.6;
+    border-left-color: #4caf50;
+}
+
+.todo-checkbox {
+    margin-top: 2px;
+    cursor: pointer;
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+}
+
+.todo-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.todo-text {
+    font-size: 12pt;
+    color: #333;
+    margin: 0 0 6px 0;
+    word-break: break-word;
+}
+
+.todo-item.completed .todo-text {
+    text-decoration: line-through;
+    color: #999;
+}
+
+.todo-meta {
+    font-size: 11pt;
+    color: #666;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-top: 6px;
+}
+
+.meta-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.meta-icon {
+    color: #667eea;
+    font-weight: 600;
+}
+
+.priority-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 10pt;
+    font-weight: 600;
+    margin-right: 8px;
+}
+
+.priority-1 {
+    background: #ffebee;
+    color: #c62828;
+}
+
+.priority-2 {
+    background: #fff3e0;
+    color: #e65100;
+}
+
+.priority-3 {
+    background: #e8f5e9;
+    color: #2e7d32;
+}
+
+.todo-actions {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.btn-delete {
+    padding: 6px 10px;
+    background: #ff6b6b;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 11pt;
+    font-family: '맑은 고딕', Malgun Gothic, sans-serif;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.btn-delete:hover {
+    background: #e63946;
+    transform: scale(1.05);
+}
+
+/* 빈 메시지 */
+.empty-message {
+    text-align: center;
+    color: #999;
+    font-size: 12pt;
+    padding: 20px;
+}
+
+/* 완료된 To Do 섹션 */
+.completed-todos {
+    padding: 20px;
+}
+
+.toggle-btn {
+    width: 100%;
+    padding: 14px;
+    background: #f8f9fa;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 12pt;
+    font-family: '맑은 고딕', Malgun Gothic, sans-serif;
+    font-weight: 600;
+    color: #333;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: all 0.3s ease;
+}
+
+.toggle-btn:hover {
+    background: #f0f1f5;
+    border-color: #667eea;
+}
+
+.toggle-icon {
+    transition: transform 0.3s ease;
+    color: #667eea;
+}
+
+.toggle-btn.active .toggle-icon {
+    transform: rotate(180deg);
+}
+
+.completed-section {
+    margin-top: 12px;
+    animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        max-height: 0;
+    }
+    to {
+        opacity: 1;
+        max-height: 1000px;
+    }
+}
+
+.completed-section .todo-item {
+    border-left-color: #4caf50;
+    opacity: 0.8;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 600px) {
+    body {
+        padding: 10px;
+    }
+
+    .container {
+        border-radius: 8px;
+    }
+
+    .header {
+        padding: 20px 15px;
+    }
+
+    .header h1 {
+        font-size: 13pt;
+    }
+
+    .input-section,
+    .active-todos,
+    .completed-todos {
+        padding: 15px;
+    }
+
+    .form-row {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+
+    .form-group label {
+        font-size: 11pt;
+    }
+
+    .todo-item {
+        padding: 12px;
+        font-size: 11pt;
+        gap: 10px;
+    }
+
+    .todo-text {
+        font-size: 11pt;
+    }
+
+    .todo-meta {
+        gap: 12px;
+    }
+
+    .btn-add {
+        width: 100%;
+        font-size: 11pt;
+    }
+
+    .btn-delete {
+        padding: 5px 8px;
+        font-size: 10pt;
+    }
+
+    .toggle-btn {
+        font-size: 11pt;
+        padding: 12px;
+    }
+
+    .section-title {
+        font-size: 11pt;
+    }
+}
+
+@media (max-width: 400px) {
+    .todo-meta {
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .header h1 {
+        font-size: 12pt;
+    }
+
+    .form-group input,
+    .form-group select {
+        font-size: 12pt;
+    }
+}

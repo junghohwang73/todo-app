@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>To Do 앱</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- 헤더 -->
+        <header class="header">
+            <h1>To Do</h1>
+        </header>
+
+        <!-- 새 To Do 입력 폼 -->
+        <section class="input-section">
+            <form id="todoForm">
+                <div class="form-group">
+                    <input 
+                        type="text" 
+                        id="todoInput" 
+                        placeholder="새로운 업무를 입력하세요"
+                        required
+                    >
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="priorityInput">우선순위</label>
+                        <select id="priorityInput">
+                            <option value="1">높음 (1)</option>
+                            <option value="2" selected>중간 (2)</option>
+                            <option value="3">낮음 (3)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="deadlineInput">마감일</label>
+                        <input 
+                            type="date" 
+                            id="deadlineInput"
+                        >
+                    </div>
+                    <button type="submit" class="btn-add">추가</button>
+                </div>
+            </form>
+        </section>
+
+        <!-- 활성 To Do 리스트 -->
+        <section class="active-todos">
+            <h2 class="section-title">진행 중인 업무</h2>
+            <ul id="todoList" class="todo-list">
+                <!-- To Do 항목이 여기에 추가됨 -->
+            </ul>
+            <div id="emptyMessage" class="empty-message">업무가 없습니다</div>
+        </section>
+
+        <!-- 완료된 To Do 리스트 -->
+        <section class="completed-todos">
+            <button id="toggleCompleted" class="toggle-btn">
+                <span class="toggle-text">완료된 업무</span>
+                <span class="toggle-icon">▼</span>
+            </button>
+            <div id="completedSection" class="completed-section" style="display: none;">
+                <ul id="completedList" class="todo-list">
+                    <!-- 완료된 To Do 항목이 여기에 추가됨 -->
+                </ul>
+                <div id="emptyCompletedMessage" class="empty-message">완료된 업무가 없습니다</div>
+            </div>
+        </section>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
