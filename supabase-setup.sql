@@ -1,12 +1,15 @@
 -- Supabase에서 실행할 SQL 스크립트
 -- 아래 코드를 Supabase SQL Editor에 복사하여 실행해주세요
+--
+-- priority 값 매핑 (앱과 일치):
+--   1 = 낮음, 2 = 중간(기본), 3 = 높음
 
 -- todos 테이블 생성
 CREATE TABLE IF NOT EXISTS todos (
   id BIGSERIAL PRIMARY KEY,
   user_id TEXT NOT NULL,
   title TEXT NOT NULL,
-  priority INTEGER NOT NULL DEFAULT 3,
+  priority INTEGER NOT NULL DEFAULT 2 CHECK (priority BETWEEN 1 AND 3),
   deadline DATE,
   created_date DATE NOT NULL DEFAULT CURRENT_DATE,
   is_completed BOOLEAN NOT NULL DEFAULT FALSE,

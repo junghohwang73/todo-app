@@ -27,3 +27,7 @@ dist-ssr
 .env
 .env.local
 .env.*.local
+
+# Microsoft Office 임시/잠금 파일
+~$*
+*.tmp

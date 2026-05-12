@@ -6,11 +6,15 @@ export default function TodoApp() {
   const [todos, setTodos] = useState([])
   const [completedTodos, setCompletedTodos] = useState([])
   const [title, setTitle] = useState('')
-  const [priority, setPriority] = useState(3)
+  const [priority, setPriority] = useState(2)
   const [deadline, setDeadline] = useState('')
   const [showCompleted, setShowCompleted] = useState(false)
   const [loading, setLoading] = useState(false)
   const [userId, setUserId] = useState(null)
+  const [editingId, setEditingId] = useState(null)
+  const [editTitle, setEditTitle] = useState('')
+  const [editPriority, setEditPriority] = useState(2)
+  const [editDeadline, setEditDeadline] = useState('')
 
   // Supabase 초기화 및 데이터 로드
   useEffect(() => {
@@ -26,8 +30,12 @@ export default function TodoApp() {
         setUserId(session.user.id)
         loadTodos(session.user.id)
       } else {
-        // 익명 사용자 ID 생성
-        const anonId = 'anon_' + Math.random().toString(36).substr(2, 9)
+        // 익명 사용자 ID — localStorage에 영속화하여 새로고침 시 데이터 유지
+        let anonId = localStorage.getItem('todo_anon_user_id')
+        if (!anonId) {
+          anonId = 'anon_' + Math.random().toString(36).substr(2, 9)
+          localStorage.setItem('todo_anon_user_id', anonId)
+        }
         setUserId(anonId)
         loadTodos(anonId)
       }
@@ -89,8 +97,16 @@ export default function TodoApp() {
     localStorage.setItem('completedTodos', JSON.stringify(completedTodos))
   }, [completedTodos])
 
-  // 우선순위에 따라 정렬
-  const sortedTodos = [...todos].sort((a, b) => (b.priority || 3) - (a.priority || 3))
+  // 우선순위 내림차순 → 마감일 오름차순(없으면 뒤로) 보조 정렬
+  const normalizePriority = (p) => Math.min(Math.max(parseInt(p) || 2, 1), 3)
+  const sortedTodos = [...todos].sort((a, b) => {
+    const diff = normalizePriority(b.priority) - normalizePriority(a.priority)
+    if (diff !== 0) return diff
+    if (!a.deadline && !b.deadline) return 0
+    if (!a.deadline) return 1
+    if (!b.deadline) return -1
+    return a.deadline.localeCompare(b.deadline)
+  })
 
   // To Do 항목 추가
   const handleAddTodo = async (e) => {
@@ -132,7 +148,7 @@ export default function TodoApp() {
       }
 
       setTitle('')
-      setPriority(3)
+      setPriority(2)
       setDeadline('')
     } catch (error) {
       console.error('To Do 추가 오류:', error)
@@ -146,7 +162,7 @@ export default function TodoApp() {
       }
       setTodos([...todos, localTodo])
       setTitle('')
-      setPriority(3)
+      setPriority(2)
       setDeadline('')
     } finally {
       setLoading(false)
@@ -219,6 +235,59 @@ export default function TodoApp() {
     }
   }
 
+  // 편집 모드 진입
+  const handleStartEdit = (todo) => {
+    setEditingId(todo.id)
+    setEditTitle(todo.title)
+    setEditPriority(normalizePriority(todo.priority))
+    setEditDeadline(todo.deadline || '')
+  }
+
+  // 편집 취소
+  const handleCancelEdit = () => {
+    setEditingId(null)
+    setEditTitle('')
+    setEditPriority(2)
+    setEditDeadline('')
+  }
+
+  // 편집 저장
+  const handleSaveEdit = async (id) => {
+    if (!editTitle.trim()) {
+      alert('업무를 입력해주세요')
+      return
+    }
+
+    const updates = {
+      title: editTitle.trim(),
+      priority: parseInt(editPriority),
+      deadline: editDeadline || null,
+    }
+
+    try {
+      setLoading(true)
+
+      const { data, error } = await supabase
+        .from('todos')
+        .update(updates)
+        .eq('id', id)
+        .select()
+
+      if (error) throw error
+
+      const updated = (data && data[0]) || null
+      setTodos(todos.map(t => t.id === id ? (updated || { ...t, ...updates }) : t))
+      handleCancelEdit()
+    } catch (error) {
+      console.error('수정 오류:', error)
+      // 로컬 폴백
+      setTodos(todos.map(t => t.id === id ? { ...t, ...updates } : t))
+      handleCancelEdit()
+    } finally {
+      setLoading(false)
+    }
+  }
+
   // To Do 항목 삭제
   const handleDeleteTodo = async (id) => {
     try {
@@ -242,19 +311,11 @@ export default function TodoApp() {
   }
 
   const getPriorityLabel = (priority) => {
-    const labels = {
-      1: '낮음',
-      2: '낮음-중간',
-      3: '중간',
-      4: '중간-높음',
-      5: '높음',
-    }
-    return labels[priority] || '중간'
+    const labels = { 1: '낮음', 2: '중간', 3: '높음' }
+    return labels[normalizePriority(priority)] || '중간'
   }
 
-  const getPriorityClass = (priority) => {
-    return `priority-${priority}`
-  }
+  const getPriorityClass = (priority) => `priority-${normalizePriority(priority)}`
 
   const formatDate = (dateString) => {
     if (!dateString) return ''
@@ -299,11 +360,9 @@ export default function TodoApp() {
                   className="priority-select"
                   disabled={loading}
                 >
-                  <option value={1}>낮음 (1)</option>
-                  <option value={2}>낮음-중간 (2)</option>
-                  <option value={3}>중간 (3)</option>
-                  <option value={4}>중간-높음 (4)</option>
-                  <option value={5}>높음 (5)</option>
+                  <option value={3}>높음</option>
+                  <option value={2}>중간</option>
+                  <option value={1}>낮음</option>
                 </select>
               </div>
 
@@ -334,40 +393,103 @@ export default function TodoApp() {
             <ul className="todo-list">
               {sortedTodos.map((todo) => (
                 <li key={todo.id} className={`todo-item ${getPriorityClass(todo.priority)}`}>
-                  <div className="todo-header-item">
-                    <div className="todo-info">
-                      <h3 className="todo-title">{todo.title}</h3>
-                      <div className="todo-meta">
-                        <span className={`priority-badge ${getPriorityClass(todo.priority)}`}>
-                          {getPriorityLabel(todo.priority)}
-                        </span>
-                        {todo.deadline && (
-                          <span className={`deadline-badge ${isOverdue(todo.deadline) ? 'overdue' : ''}`}>
-                            마감: {formatDate(todo.deadline)}
-                            {isOverdue(todo.deadline) && <span className="overdue-text"> (기한 경과)</span>}
-                          </span>
-                        )}
+                  {editingId === todo.id ? (
+                    <div className="edit-form">
+                      <input
+                        type="text"
+                        value={editTitle}
+                        onChange={(e) => setEditTitle(e.target.value)}
+                        className="input-field"
+                        placeholder="업무를 입력하세요"
+                        disabled={loading}
+                        autoFocus
+                      />
+                      <div className="edit-row">
+                        <div className="form-group">
+                          <label>우선순위</label>
+                          <select
+                            value={editPriority}
+                            onChange={(e) => setEditPriority(Number(e.target.value))}
+                            className="priority-select"
+                            disabled={loading}
+                          >
+                            <option value={3}>높음</option>
+                            <option value={2}>중간</option>
+                            <option value={1}>낮음</option>
+                          </select>
+                        </div>
+                        <div className="form-group">
+                          <label>마감일</label>
+                          <input
+                            type="date"
+                            value={editDeadline}
+                            onChange={(e) => setEditDeadline(e.target.value)}
+                            className="deadline-input"
+                            disabled={loading}
+                          />
+                        </div>
+                      </div>
+                      <div className="edit-actions">
+                        <button
+                          onClick={() => handleSaveEdit(todo.id)}
+                          className="save-btn"
+                          disabled={loading}
+                        >
+                          저장
+                        </button>
+                        <button
+                          onClick={handleCancelEdit}
+                          className="cancel-btn"
+                          disabled={loading}
+                        >
+                          취소
+                        </button>
                       </div>
                     </div>
-                    <div className="todo-actions">
-                      <button
-                        onClick={() => handleCompleteTodo(todo.id)}
-                        className="complete-btn"
-                        title="완료"
-                        disabled={loading}
-                      >
-                        ✓
-                      </button>
-                      <button
-                        onClick={() => handleDeleteTodo(todo.id)}
-                        className="delete-btn"
-                        title="삭제"
-                        disabled={loading}
-                      >
-                        ✕
-                      </button>
+                  ) : (
+                    <div className="todo-header-item">
+                      <div className="todo-info">
+                        <h3 className="todo-title">{todo.title}</h3>
+                        <div className="todo-meta">
+                          <span className={`priority-badge ${getPriorityClass(todo.priority)}`}>
+                            {getPriorityLabel(todo.priority)}
+                          </span>
+                          {todo.deadline && (
+                            <span className={`deadline-badge ${isOverdue(todo.deadline) ? 'overdue' : ''}`}>
+                              마감: {formatDate(todo.deadline)}
+                              {isOverdue(todo.deadline) && <span className="overdue-text"> (기한 경과)</span>}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <div className="todo-actions">
+                        <button
+                          onClick={() => handleCompleteTodo(todo.id)}
+                          className="complete-btn"
+                          title="완료"
+                          disabled={loading}
+                        >
+                          ✓
+                        </button>
+                        <button
+                          onClick={() => handleStartEdit(todo)}
+                          className="edit-btn"
+                          title="수정"
+                          disabled={loading}
+                        >
+                          ✎
+                        </button>
+                        <button
+                          onClick={() => handleDeleteTodo(todo.id)}
+                          className="delete-btn"
+                          title="삭제"
+                          disabled={loading}
+                        >
+                          ✕
+                        </button>
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </li>
               ))}
             </ul>
