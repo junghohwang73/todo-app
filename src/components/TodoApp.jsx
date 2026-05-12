@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import '../styles/TodoApp.css'
-import { supabase } from '../lib/supabase'
+import { supabase, hasSupabase } from '../lib/supabase'
 
 export default function TodoApp() {
   const [todos, setTodos] = useState([])
@@ -21,27 +21,40 @@ export default function TodoApp() {
     initializeSupabase()
   }, [])
 
+  // 익명 사용자 ID를 localStorage에 영속화하여 새로고침 시 데이터 유지
+  const getOrCreateAnonId = () => {
+    let anonId = localStorage.getItem('todo_anon_user_id')
+    if (!anonId) {
+      anonId = 'anon_' + Math.random().toString(36).substr(2, 9)
+      localStorage.setItem('todo_anon_user_id', anonId)
+    }
+    return anonId
+  }
+
   const initializeSupabase = async () => {
+    // Supabase 미설정 시 로컬 모드로 진입
+    if (!hasSupabase) {
+      const anonId = getOrCreateAnonId()
+      setUserId(anonId)
+      loadFromLocalStorage()
+      return
+    }
+
     try {
-      // 세션 확인
       const { data: { session } } = await supabase.auth.getSession()
-      
+
       if (session?.user?.id) {
         setUserId(session.user.id)
         loadTodos(session.user.id)
       } else {
-        // 익명 사용자 ID — localStorage에 영속화하여 새로고침 시 데이터 유지
-        let anonId = localStorage.getItem('todo_anon_user_id')
-        if (!anonId) {
-          anonId = 'anon_' + Math.random().toString(36).substr(2, 9)
-          localStorage.setItem('todo_anon_user_id', anonId)
-        }
+        const anonId = getOrCreateAnonId()
         setUserId(anonId)
         loadTodos(anonId)
       }
     } catch (error) {
       console.error('Supabase 초기화 오류:', error)
-      // 로컬 스토리지에서 폴백
+      // 폴백: 익명 ID + 로컬 스토리지 데이터
+      setUserId(getOrCreateAnonId())
       loadFromLocalStorage()
     }
   }
@@ -119,7 +132,7 @@ export default function TodoApp() {
 
     try {
       setLoading(true)
-      
+
       const newTodo = {
         user_id: userId,
         title: title.trim(),
@@ -128,6 +141,8 @@ export default function TodoApp() {
         created_date: new Date().toISOString().split('T')[0],
         is_completed: false,
       }
+
+      if (!hasSupabase) throw new Error('LOCAL_ONLY')
 
       const { data, error } = await supabase
         .from('todos')
@@ -151,7 +166,7 @@ export default function TodoApp() {
       setPriority(2)
       setDeadline('')
     } catch (error) {
-      console.error('To Do 추가 오류:', error)
+      if (error?.message !== 'LOCAL_ONLY') console.error('To Do 추가 오류:', error)
       // 로컬 저장 폴백
       const localTodo = {
         id: Date.now(),
@@ -179,6 +194,8 @@ export default function TodoApp() {
 
       const completedDate = new Date().toISOString().split('T')[0]
 
+      if (!hasSupabase) throw new Error('LOCAL_ONLY')
+
       const { data, error } = await supabase
         .from('todos')
         .update({
@@ -196,7 +213,7 @@ export default function TodoApp() {
         setTodos(todos.filter(t => t.id !== id))
       }
     } catch (error) {
-      console.error('완료 처리 오류:', error)
+      if (error?.message !== 'LOCAL_ONLY') console.error('완료 처리 오류:', error)
       // 로컬 처리 폴백
       const todo = todos.find(t => t.id === id)
       if (todo) {
@@ -217,7 +234,9 @@ export default function TodoApp() {
   const handleDeleteCompleted = async (id) => {
     try {
       setLoading(true)
-      
+
+      if (!hasSupabase) throw new Error('LOCAL_ONLY')
+
       const { error } = await supabase
         .from('todos')
         .delete()
@@ -227,7 +246,7 @@ export default function TodoApp() {
 
       setCompletedTodos(completedTodos.filter(t => t.id !== id))
     } catch (error) {
-      console.error('삭제 오류:', error)
+      if (error?.message !== 'LOCAL_ONLY') console.error('삭제 오류:', error)
       // 로컬 삭제 폴백
       setCompletedTodos(completedTodos.filter(t => t.id !== id))
     } finally {
@@ -267,6 +286,8 @@ export default function TodoApp() {
     try {
       setLoading(true)
 
+      if (!hasSupabase) throw new Error('LOCAL_ONLY')
+
       const { data, error } = await supabase
         .from('todos')
         .update(updates)
@@ -279,7 +300,7 @@ export default function TodoApp() {
       setTodos(todos.map(t => t.id === id ? (updated || { ...t, ...updates }) : t))
       handleCancelEdit()
     } catch (error) {
-      console.error('수정 오류:', error)
+      if (error?.message !== 'LOCAL_ONLY') console.error('수정 오류:', error)
       // 로컬 폴백
       setTodos(todos.map(t => t.id === id ? { ...t, ...updates } : t))
       handleCancelEdit()
@@ -292,7 +313,9 @@ export default function TodoApp() {
   const handleDeleteTodo = async (id) => {
     try {
       setLoading(true)
-      
+
+      if (!hasSupabase) throw new Error('LOCAL_ONLY')
+
       const { error } = await supabase
         .from('todos')
         .delete()
@@ -302,7 +325,7 @@ export default function TodoApp() {
 
       setTodos(todos.filter(t => t.id !== id))
     } catch (error) {
-      console.error('삭제 오류:', error)
+      if (error?.message !== 'LOCAL_ONLY') console.error('삭제 오류:', error)
       // 로컬 삭제 폴백
       setTodos(todos.filter(t => t.id !== id))
     } finally {
